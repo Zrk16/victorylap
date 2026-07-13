@@ -99,19 +99,23 @@ function firstParagraph(markdown) {
     
 }
 
+export function analyzeRepo(repoPath) {
+    const readme = readReadme(repoPath);
 
-  const readme = readReadme(repoPath);
+    return {
+        analyzedAt: new Date().toISOString(),
+        repoPath,
+        package: readPackageJson(repoPath),
+        languages: detectLanguages(repoPath),
+        git: readGitLog(repoPath),
+        readme: {
+            found: readme !== null,
+            firstParagraph: firstParagraph(readme),
+        },
+    };
+}
 
-  const report = {
-      analyzedAt: new Date().toISOString(),
-      repoPath,
-      package: readPackageJson(repoPath),
-      languages: detectLanguages(repoPath),
-      git: readGitLog(repoPath),
-      readme: {
-          found: readme !== null,
-          firstParagraph: firstParagraph(readme),
-      },
-  };
-
-   console.log(JSON.stringify(report, null, 2));
+ // still works as a standalone command: node analyze.js <path>
+  if (process.argv[1].endsWith("analyze.js")) {
+      console.log(JSON.stringify(analyzeRepo(process.argv[2] || "."), null, 2));
+  }

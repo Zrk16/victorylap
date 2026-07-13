@@ -1,11 +1,18 @@
-<!DOCTYPE html>
+ export function titleCard(script) {
+      const statsHtml = script.stats.map(s => `
+          <div>
+              <div class="stat-value">${s.value}</div>
+              <div class="stat-label">${s.label}</div>
+          </div>`).join("");
+
+      return `<!DOCTYPE html>
   <html lang="en">
 
   <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=1920, height=1080">
       <title>victorylap frame</title>
-      <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"><\/script>
       <style>
           * {
               margin: 0;
@@ -83,22 +90,10 @@
       <div id="root" data-composition-id="main" data-start="0" data-width="1920" data-height="1080" data-duration="5">
 
           <section id="title-card" class="clip" data-start="0" data-duration="5" data-track-index="1">
-              <p class="label" id="shipped">Paste URL. Get roasted by AI.</p>
-              <h1 class="project-name" id="name">SITE SLAP</h1>
-              <p class="tagline" id="tag">AI roasts your website with scores and haiku previews.</p>
-              <div class="stats" id="stats">
-          <div>
-              <div class="stat-value">15</div>
-              <div class="stat-label">commits</div>
-          </div>
-          <div>
-              <div class="stat-value">11</div>
-              <div class="stat-label">TS files</div>
-          </div>
-          <div>
-              <div class="stat-value">7</div>
-              <div class="stat-label">days built</div>
-          </div>
+              <p class="label" id="shipped">${script.hook}</p>
+              <h1 class="project-name" id="name">${script.projectName}</h1>
+              <p class="tagline" id="tag">${script.tagline}</p>
+              <div class="stats" id="stats">${statsHtml}
               </div>
           </section>
       </div>
@@ -114,8 +109,9 @@
           tl.from("#stats", { y: 30, opacity: 0, duration: 0.6, ease: "power3.out" }, 1.2);
 
           window.__timelines["main"] = tl;
-      </script>
+      <\/script>
 
   </body>
 
-  </html>
+  </html>`;
+  }
