@@ -1,8 +1,15 @@
+#!/usr/bin/env node
+//-drake(SHEBANG)
+
+
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const MODEL ="nvidia/nemotron-3-ultra-550b-a55b:free";
 import { analyzeRepo } from "./analyze.js";
 import { writeFileSync } from "node:fs";
 import { titleCard } from "./templates/title-card.js";
+import { join } from "node:path";
+const PKG_DIR = import.meta.dirname;
+
 
 
 async function askLLM(prompt) {
@@ -59,5 +66,5 @@ write the script as json with exactly this shape:
   const clean = reply.replace(/```json|```/g, "").trim();
   const script = JSON.parse(clean); 
 
-writeFileSync("video/index.html", titleCard(script));
+ writeFileSync(join(PKG_DIR, "video", "index.html"), titleCard(script));
 console.log("wrote video/index.html for", script.projectName);
