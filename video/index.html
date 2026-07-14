@@ -7,27 +7,22 @@
       <title>victorylap frame</title>
       <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
       <style>
-          * {
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
-          }
+          * { margin: 0; padding: 0; box-sizing: border-box; }
 
           body {
               background: #0a0a0a;
               font-family: "JetBrains Mono", monospace;
           }
 
-          /* composition root */
           #root {
               position: relative;
               width: 1920px;
               height: 1080px;
               overflow: hidden;
               color: #f0ede4;
+              
           }
 
-          /* clip */
           .clip {
               position: absolute;
               inset: 0;
@@ -37,13 +32,16 @@
               padding: 120px;
           }
 
-          .label {
-              font-size: 22px;
-              letter-spacing: 0.2em;
-              color: #8a8474;
-              margin-bottom: 40px;
+          /* scene 1 - hook */
+          .hook-text {
+              font-size: 110px;
+              font-weight: 800;
+              line-height: 1.1;
+              max-width: 1400px;
+              color: #ffb000;
           }
 
+          /* scene 2 - name + tagline */
           .project-name {
               font-size: 140px;
               font-weight: 800;
@@ -55,67 +53,134 @@
               font-size: 36px;
               color: #b8b2a2;
               max-width: 1200px;
-              margin-bottom: 80px;
           }
 
+          /* scene 3 - stats */
           .stats {
               display: flex;
-              gap: 100px;
+              gap: 140px;
+              justify-content: center;
           }
 
           .stat-value {
-              font-size: 72px;
+              font-size: 110px;
               font-weight: 800;
               color: #ffb000;
           }
 
           .stat-label {
-              font-size: 20px;
+              font-size: 24px;
               letter-spacing: 0.15em;
               color: #8a8474;
-              margin-top: 8px;
+              margin-top: 12px;
           }
+
+          /* scene 4 - closer */
+          .closer-text {
+              font-size: 90px;
+              font-weight: 800;
+              max-width: 1400px;
+          }
+
+          .bg-grid {
+             position: absolute;
+             inset: 0;
+             background-image: 
+                linear-gradient(rgba(255, 176, 0, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 176, 0, 0.05) 1px, transparent 1px);
+            background-size: 80px 80px;
+          
+          
+          }
+
+
+           .vignette {
+              position: absolute;
+              inset: 0;
+              background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.55) 100%);
+          }
+
+
+          .credit {
+              position: absolute;
+              bottom: 80px;
+              left: 120px;
+              font-size: 20px;
+              letter-spacing: 0.2em;
+              color: #8a8474;
+          }
+
+          
       </style>
   </head>
 
   <body>
+      <div id="root" data-composition-id="main" data-start="0" data-width="1920" data-height="1080" data-duration="12">
+          <section id="bg-layer" class="clip" data-start="0" data-duration="12" data-track-index="0" style="padding: 0;">
+             <div class="bg-grid"></div>
+             <div class="vignette"></div>
+          </section>
 
-      <div id="root" data-composition-id="main" data-start="0" data-width="1920" data-height="1080" data-duration="5">
+          <audio id="bgm" src="assets/music.mp3" data-start="0" data-duration="12" data-media-start="30" data-track-index="10" data-volume="0.8"></audio>
 
-          <section id="title-card" class="clip" data-start="0" data-duration="5" data-track-index="1">
-              <p class="label" id="shipped">Paste URL. Get roasted. Instantly.</p>
+          <section id="scene-hook" class="clip" data-start="0" data-duration="3" data-track-index="1">
+              <h1 class="hook-text" id="hook">Paste URL. Get roasted. Instantly.</h1>
+          </section>
+
+          <section id="scene-name" class="clip" data-start="3" data-duration="3.5" data-track-index="1">
               <h1 class="project-name" id="name">SITE SLAP</h1>
-              <p class="tagline" id="tag">Paste any URL, get a 100-point roast score.</p>
+              <p class="tagline" id="tag">Scores websites 0-100 with AI roasts and visual previews.</p>
+          </section>
+
+          <section id="scene-stats" class="clip" data-start="6.5" data-duration="3" data-track-index="1">
               <div class="stats" id="stats">
           <div>
               <div class="stat-value">15</div>
-              <div class="stat-label">Commits</div>
+              <div class="stat-label">commits</div>
           </div>
           <div>
-              <div class="stat-value">16</div>
-              <div class="stat-label">Files</div>
+              <div class="stat-value">11</div>
+              <div class="stat-label">TS files</div>
           </div>
           <div>
               <div class="stat-value">7</div>
-              <div class="stat-label">Days</div>
+              <div class="stat-label">days</div>
           </div>
               </div>
+          </section>
+
+          <section id="scene-closer" class="clip" data-start="9.5" data-duration="2.5" data-track-index="1">
+              <h1 class="closer-text" id="closer">Shipped in a week.</h1>
+              <p class="credit" id="credit">MADE WITH VICTORYLAP</p>
           </section>
       </div>
 
       <script>
-          // hyperframes scrubs this paused timeline
           window.__timelines = window.__timelines || {};
-
           const tl = gsap.timeline({ paused: true });
-          tl.from("#shipped", { y: 30, opacity: 0, duration: 0.5, ease: "power3.out" }, 0.3);
-          tl.from("#name", { y: 60, opacity: 0, duration: 0.7, ease: "power3.out" }, 0.5);
-          tl.from("#tag", { y: 30, opacity: 0, duration: 0.5, ease: "power3.out" }, 0.9);
-          tl.from("#stats", { y: 30, opacity: 0, duration: 0.6, ease: "power3.out" }, 1.2);
+
+          // scene 1
+          tl.from("#hook", { y: 60, opacity: 0, duration: 0.7, ease: "power3.out" }, 0.3);
+
+          // scene 2 - times are absolute, clip opens at 3s
+          tl.from("#name", { y: 60, opacity: 0, duration: 0.7, ease: "power3.out" }, 3.2);
+          tl.from("#tag", { y: 30, opacity: 0, duration: 0.5, ease: "power3.out" }, 3.6);
+
+          // scene 3 - clip opens at 6.5s
+          tl.from("#stats > div", { y: 40, opacity: 0, duration: 0.6, ease: "power3.out", stagger: 0.15 }, 6.7);
+
+          // scene 4 - clip opens at 9.5s
+          tl.from("#closer", { y: 60, opacity: 0, duration: 0.7, ease: "power3.out" }, 9.7);
+          tl.from("#credit", { opacity: 0, duration: 0.5 }, 10.2);
+
+          // exits - each scene leaves just before the clip ends
+          tl.to("#hook", { y: -40, opacity: 0, duration: 0.4, ease: "power2.in" }, 2.55);
+          tl.to("#bgm", { volume: 0, duration: 1.2 }, 10.8);
+          tl.to("#scene-name > *", { y: -30, opacity: 0, duration: 0.4, ease: "power2.in", stagger: 0.05 }, 6.0);
+          tl.to("#stats > div", { y: -30, opacity: 0, duration: 0.4, ease: "power2.in", stagger: 0.08 }, 9.0);
 
           window.__timelines["main"] = tl;
       </script>
-
   </body>
 
   </html>
