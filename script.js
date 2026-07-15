@@ -27,11 +27,26 @@ function isRepoUrl(input) {
 }
 
 function parseArgs(argv) {
-    const args = { repoPath: ".", out: null, theme: "default" };
+    const args = { repoPath: ".", out: null, theme: "default", quality: "draft" };
     for (let i = 2; i < argv.length; i++) {
         const flag = argv[i];
-        if (flag === "--out") args.out = argv[++i];
+        if (flag === "--help") {
+            console.log(`victorylap - turn any repo into a brag video
+
+usage:
+  victorylap <path-or-github-url> [options]
+
+options:
+  --out <file>       where to save the mp4 (default: ./<project>.mp4)
+  --theme <name>     video theme (default: default)
+  --quality <level>  render quality (default: draft)
+  --help             this
+`);
+            process.exit(0);
+        }
+        else if (flag === "--out") args.out = argv[++i];
         else if (flag === "--theme") args.theme = argv[++i];
+        else if (flag === "--quality") args.quality = argv[++i];
         else args.repoPath = flag;
     }
     return args;
@@ -65,39 +80,39 @@ const args = parseArgs(process.argv);
 
 let cloneDir = null;
 
+function die(message) {
+    console.error(message);
+    if (cloneDir) rmSync(cloneDir, { recursive: true, force: true, maxRetries: 3});
+    process.exit(1);
+}
+
 if (isRepoUrl(args.repoPath)) {
     cloneDir = mkdtempSync(join(tmpdir(), "victorylap-"));
     console.log("cloning", args.repoPath, "...");
     try {
         execFileSync("git", ["clone", args.repoPath, join(cloneDir, "repo")], { stdio: "inherit" });
     } catch {
-        console.error("could not clone that url, is that a real PUBLIC repo?");
-        process.exit(1);
+        die("could not clone that url, is that a real PUBLIC repo?");
     }
     args.repoPath = join(cloneDir, "repo");
 }
 
 if (!existsSync(args.repoPath)) {
-    console.error(`no such folder: ${args.repoPath}`);
-    process.exit(1);
+    die(`no such folder: ${args.repoPath}`);
 }
 
  if (!statSync(args.repoPath).isDirectory()) {
-    console.error(`${args.repoPath} is a file, not a folder. point me at a repo`);
-    process.exit(1);
+    die(`${args.repoPath} is a file, not a folder. point me at a repo`);
  }
 
  if (!THEMES[args.theme]) {
-    console.error(`unknown theme "${args.theme}". available: ${Object.keys(THEMES).join(", ")}`);
-    process.exit(1);
+    die(`unknown theme "${args.theme}". available: ${Object.keys(THEMES).join(", ")}`);
  }
 
  const facts = analyzeRepo(args.repoPath);
 
  if (!facts.package && !facts.git && !facts.readme.found) {
-    console.error("no package.json, no git history, no readme. nothing to take a victory lap about here.");
-    process.exit(1);
-
+    die("no package.json, no git history, no readme. nothing to take a victory lap about here.");
  }
 
 
@@ -133,8 +148,7 @@ write the script as json with exactly this shape:
   try {
     script = JSON.parse(clean);
 } catch {
-    console.error("the llm replied with broken json. run it again, free models have moods :)");
-    process.exit(1);
+    die("the llm replied with broken json. run it again, free models have moods :)");
 }
 
 
@@ -164,9 +178,9 @@ const WORDS = [
 
 const SPINNER = [ "|", "/", "-", "\\"];
 
-function renderVideo(videoDir) {
+function renderVideo(videoDir, quality) {
     return new Promise((resolve, reject) => {
-        const proc = spawn("npx -y hyperframes render --quality draft", {
+        const proc = spawn(`npx -y hyperframes render --quality ${quality}`, {
             cwd: videoDir,
             shell: true,
             env: { ...process.env, CI: "true" },
@@ -202,7 +216,7 @@ function renderVideo(videoDir) {
     });
 }
 
-await renderVideo(join(PKG_DIR, "video"));
+await renderVideo(join(PKG_DIR, "video"), args.quality);
 
 
 const rendersDir = join(PKG_DIR, "video", "renders");
