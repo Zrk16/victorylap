@@ -3,21 +3,27 @@
 
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-const MODEL ="nvidia/nemotron-3-ultra-550b-a55b:free";
+const MODELS = [
+    "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "meta-llama/llama-3.3-70b-instruct:free",
+    "google/gemini-2.0-flash-exp:free",
+];
 if (!OPENROUTER_API_KEY) {
     console.error("victorylap needs an OpenRouter API key.");
     console.error("set it first:  $env:OPENROUTER_API_KEY = \"your-key\"");
     process.exit(1);
 }
 import { analyzeRepo } from "./analyze.js";
-import { writeFileSync, existsSync, statSync, readdirSync, copyFileSync, mkdtempSync, rmSync } from "node:fs";
+import { writeFileSync, existsSync, statSync, readdirSync, copyFileSync, mkdtempSync, rmSync, mkdirSync } from "node:fs";
 import { execSync, execFileSync, spawn } from "node:child_process";
 import { tmpdir } from "node:os";
 import { titleCard } from "./templates/title-card.js";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
+import { paper } from "./templates/paper.js";
 const PKG_DIR = import.meta.dirname;
 const THEMES = {
     default: titleCard,
+    paper: paper,
 
 };
 
@@ -55,25 +61,41 @@ options:
 
 
 async function askLLM(prompt) {
-    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-            "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-            "Content-Type": "application/json", 
-        }, 
-        body: JSON.stringify({
-            model: MODEL,
-            messages: [{ role: "user", content: prompt }],
-        }),
-    });
-    if (!res.ok) {
-        throw new Error(`openrouter said ${res.status}: ${await res.text()}`);
+    let lastError = "" 
+    for (const model of MODELS) {
+        const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                model: model, 
+                messages: [{ role: "user", content: prompt }],
+            }),
+        });
+
+        if (!res.ok) {
+            lastError =`${model} said ${res.status}`;
+            console.log(`${model} didn't answer, trying the next :) ...`);
+            continue;
+        }
+        const data = await res.json();
+        if (!data.choices || !data.choices[0]) {
+            lastError = `${model}: ${JSON.stringify(data.error || data )}`;
+
+            console.log(` ${model} has a mood, trying the next :) ...`);
+            continue;
+        }
+
+
+        return data.choices[0].message.content; 
+
     }
-
-    const data = await res.json();
-    return data.choices[0].message.content;
-
+    die('every model refused. last error:\n${lastError');
 }
+
+         
 
 
 const args = parseArgs(process.argv);
@@ -155,7 +177,14 @@ write the script as json with exactly this shape:
 
 
 
-writeFileSync(join(PKG_DIR, "video", "index.html"), THEMES[args.theme](script));
+const files = THEMES[args.theme](script);
+for (const [relPath, html] of Object.entries(files)) {
+    const fullPath = join(PKG_DIR, "video", relPath);
+    mkdirSync(dirname(fullPath), {recursive: true });
+    writeFileSync(fullPath, html);
+}
+
+
 console.log("script ready for", script.projectName, "- rendering...");
 
 
