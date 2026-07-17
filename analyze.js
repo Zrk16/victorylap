@@ -8,14 +8,19 @@ import { execSync } from "node:child_process";
 function readPackageJson(repo) {
     const file = join(repo, "package.json");
     if (!existsSync(file)) return null;
+    try {
+        const pkg = JSON.parse(readFileSync(file, "utf8"));
+        return {
+            name: pkg.name || null,
+            description: pkg.description || null,
+            dependencies: Object.keys(pkg.dependencies || {}),
+        };
+    } catch {
+        return null;
+    }
 
-    const pkg = JSON.parse(readFileSync(file, "utf8"));
-    return {
-        name: pkg.name || null,
-        description: pkg.description || null,
-        dependencies: Object.keys(pkg.dependencies || {}),
-    };
 }
+    
 
 function readReadme(repo) {
     const names = ["README.md", "readme.md", "README"];
@@ -47,10 +52,16 @@ const LANGUAGES = {
 };
 
 function walk(dir, counts = {}) {
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    let entries;
+    try {
+        entries = readdirSync(dir, { withFileTypes: true });
+    } catch {
+        return counts;
+    }
+    for (const entry of entries) {
         if (entry.isDirectory()) {
             if (SKIP_DIRS.has(entry.name)) continue;
-            walk(join(dir, entry.name), counts); 
+            walk(join(dir, entry.name), counts);
         } else {
             const lang = LANGUAGES[extname(entry.name)];
             if (lang) counts[lang] = (counts[lang] || 0) + 1;
